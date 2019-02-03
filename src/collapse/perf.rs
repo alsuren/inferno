@@ -26,25 +26,19 @@ pub struct Options {
     pub event_filter: Option<String>,
 }
 
-pub fn handle_file<R: BufRead, W: Write>(opt: Options, mut reader: R, writer: W) -> io::Result<()> {
-    let mut line = String::new();
+pub fn handle_file<R: BufRead, W: Write>(opt: Options, reader: R, writer: W) -> io::Result<()> {
     let mut state = PerfState::from(opt);
-    loop {
-        line.clear();
 
-        if reader.read_line(&mut line)? == 0 {
-            break;
-        }
-
+    for line in reader.lines() {
+        let line = line?;
         if line.starts_with('#') {
             continue;
         }
 
-        let line = line.trim_end();
         if line.is_empty() {
             state.after_event();
         } else {
-            state.on_line(line.trim_end());
+            state.on_line(&line);
         }
     }
 
